@@ -1,13 +1,21 @@
 package thetvdb4s
 
-import org.http4s.{LanguageTag, MediaType, Uri}
-import org.http4s.headers.{`Accept-Language`, Accept}
+import org.http4s.{AuthScheme, Credentials, LanguageTag, MediaType, Uri}
+import org.http4s.headers.{`Accept-Language`, Accept, Authorization}
 import thetvdb4s.Authentication.Token
 
-case class Context private(baseUri: Uri, acceptHeader: Accept, acceptLanguageHeader: `Accept-Language`, token: Option[Token]) {
-  def updateToken(token: Token): Context = copy(token = Some(token))
+case class Context private(baseUri: Uri,
+                           acceptHeader: Accept,
+                           acceptLanguageHeader: `Accept-Language`,
+                           private val authHeaderOption: Option[Authorization]) {
+  def updateAuthHeather(token: Token): Context = {
+    copy(authHeaderOption = Some(Authorization(Credentials.Token(AuthScheme.Bearer, token.token))))
+  }
 
-  def validate(): Unit = require(token.isDefined, "Context requires a valid token")
+  def authHeader: Authorization = {
+    require(authHeaderOption.isDefined, "Context requires a valid authorization header")
+    authHeaderOption.get
+  }
 }
 
 object Context {

@@ -2,12 +2,10 @@ package thetvdb4s
 
 import cats.effect.IO
 import io.circe.generic.auto._
-import org.http4s.{AuthScheme, Credentials}
 import org.http4s.circe.{jsonOf, _}
 import org.http4s.client.blaze.Http1Client
 import org.http4s.client.dsl.io._
 import org.http4s.dsl.io.GET
-import org.http4s.headers.Authorization
 
 object Episodes {
   case class EpisodeRecordData(data: Episode,
@@ -47,9 +45,8 @@ object Episodes {
                         invalidLanguage: String,
                         invalidQueryParams: List[String])
 
-  def episodes(id: Int)(implicit ctx: Context): IO[EpisodeRecordData] = withToken { token =>
-    val req = GET(ctx.baseUri / "episodes" / id.toString, ctx.acceptHeader, ctx.acceptLanguageHeader,
-      Authorization(Credentials.Token(AuthScheme.Bearer, token.token)))
+  def episodes(id: Int)(implicit ctx: Context): IO[EpisodeRecordData] = {
+    val req = GET(ctx.baseUri / "episodes" / id.toString, ctx.acceptHeader, ctx.acceptLanguageHeader, ctx.authHeader)
     Http1Client[IO]().flatMap { httpClient =>
       httpClient.expect(req)(jsonOf[IO, EpisodeRecordData])
     }
